@@ -1,0 +1,41 @@
+﻿<Window x:Class="ChatApp2.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ChatApp2"
+        mc:Ignorable="d"
+        Title="Чат 2.0" Height="450" Width="1000" Closing="Window_Closing">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="305*"/>
+            <RowDefinition Height="auto"/>
+        </Grid.RowDefinitions>
+        <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <TextBlock Margin="5" Text="Ваше имя"></TextBlock>
+                <TextBox MaxLength="10" Width="100" Name="TBoxMyCode" Margin="5"></TextBox>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <Button Content="Обновить" Name="BtnUpdate" Click="BtnUpdate_Click" Margin="5" Width="100"></Button>
+                <CheckBox IsEnabled="False" Margin="5" Name="CheckBoxUpdate" Content="Автообновление" IsChecked="True" Checked="CheckBoxUpdate_Checked" Unchecked="CheckBoxUpdate_Unchecked"></CheckBox>
+            </StackPanel>
+            <TextBlock HorizontalAlignment="Right" Name="TBlockFilesCount" Text="Загрузка диалога..." Margin="5"></TextBlock>
+        </StackPanel>
+        <TextBox VerticalScrollBarVisibility="Visible" Name="TBoxDialog" Margin="5" IsReadOnly="True" Grid.Row="1"></TextBox>
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="50*"/>
+                <ColumnDefinition Width="43*"/>
+            </Grid.ColumnDefinitions>
+            <TextBox HorizontalAlignment="Stretch" KeyDown="TBoxMessage_KeyDown" MaxLength="60" Name="TBoxMessage" Margin="5"></TextBox>
+            <DockPanel Grid.Column="1">
+                <Button Name="BtnSend" Grid.Column="1" Click="BtnSend_Click" Content="Отправить файл" Margin="5"></Button>
+                <Button Name="BtnFile" Grid.Column="1" Click="BtnFile_Click" Content="Прикрепить файл" Margin="5"></Button>
+                <Button Name="BtnSave" Grid.Column="1" Click="BtnSave_Click" Content="Сохранить все файлы" Margin="5"></Button>
+                <Button Name="BtnClean" Grid.Column="1" Click="BtnClean_Click" Content="Очистить диалог" Margin="5"></Button>
+            </DockPanel>
+        </Grid>
+    </Grid>
+</Window>
