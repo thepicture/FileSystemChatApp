@@ -95,7 +95,7 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="AppData.cs" />
+    <Compile Include="Models\AppData.cs" />
     <Compile Include="FileWindow.xaml.cs">
       <DependentUpon>FileWindow.xaml</DependentUpon>
     </Compile>
@@ -109,7 +109,9 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MessageEntity.cs" />
+    <Compile Include="Models\Emoji.cs" />
+    <Compile Include="Models\MessageEntity.cs" />
+    <Compile Include="Models\ChatFile.cs" />
     <Compile Include="MyCodeWindow.xaml.cs">
       <DependentUpon>MyCodeWindow.xaml</DependentUpon>
     </Compile>

@@ -1,4 +1,5 @@
-﻿using Microsoft.Win32;
+﻿using ChatApp2.Models;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -84,6 +85,10 @@ namespace ChatApp2
 
             _ = TBoxMessage.Focus();
             timer.Elapsed += Timer_Elapsed;
+        }
+
+        public MainWindow()
+        {
         }
 
         private static bool UserWantsToOpenAttachedFile()
@@ -572,11 +577,6 @@ namespace ChatApp2
             EmojiList.Visibility = Visibility.Visible;
             EmojiList.ItemsSource = from emoji in emojiesTemplate.Split(' ')
                                     select new Emoji { EmojiSelected = emoji };
-        }
-
-        public class Emoji
-        {
-            public string EmojiSelected { get; set; }
         }
 
         /// <summary>

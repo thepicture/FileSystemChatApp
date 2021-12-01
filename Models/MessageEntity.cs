@@ -1,13 +1,22 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows.Media.Imaging;
 
-namespace ChatApp2
+namespace ChatApp2.Models
 {
     public class MessageEntity
     {
-        public readonly string[] imageFormats = new string[] { "png", "jpg", "gif", "bmp", "jpeg", "webp" };
+        public readonly string[] imageFormats = new string[]
+        {
+            "png",
+            "jpg",
+            "gif",
+            "bmp",
+            "jpeg",
+            "webp"
+        };
         public enum Day : int
         {
             Пнд = 1,
@@ -18,7 +27,8 @@ namespace ChatApp2
             Суб = 6,
             Вск = 7
         }
-        public readonly string currentDirectoryStream = Directory.GetCurrentDirectory() + "\\s";
+        public readonly string currentDirectoryStream = Directory.GetCurrentDirectory()
+                                                        + "\\s";
         public string UserName { get; set; }
         public string Date { get; set; }
         public string Time { get; set; }
@@ -30,45 +40,42 @@ namespace ChatApp2
         {
             get
             {
-                var intDate = (DateTime.Now.DayOfWeek == 0) ? (Day)7 : (Day)DateTime.Now.DayOfWeek; ;
+                Day intDate = (DateTime.Now.DayOfWeek == 0)
+                    ? (Day)7
+                    : (Day)DateTime.Now.DayOfWeek;
                 return intDate.ToString();
             }
         }
 
-        public string GetDate
+        public string GetGetDate()
         {
-            get
-            {
-                return Date.Replace('.', '/');
-            }
+            return Date.Replace('.', '/');
         }
-        public string GetMessage
-        {
-            get
-            {
-                return Message.Length > 0 ? Message : $"[{FileName}]";
-            }
-        }
+
+        public string GetMessage => Message.Length > 0 ? Message : $"[{FileName}]";
         public BitmapImage GetImage
         {
             get
             {
                 if (AppData.MainWindow.CheckBoxImage.IsChecked == false)
+                {
                     return null;
+                }
+
                 if ((FileName != null) && imageFormats.Any(FileName.Contains))
                 {
-                    var lines = File.ReadLines(currentDirectoryStream);
-                    foreach (var line in lines)
+                    IEnumerable<string> lines = File.ReadLines(currentDirectoryStream);
+                    foreach (string line in lines)
                     {
                         {
                             if (line.Contains(FileName))
                             {
-                                var encodedStream = line.Split('\t')[1];
-                                var data = Convert.FromBase64String(encodedStream);
-                                var stream = new MemoryStream(data);
+                                string encodedStream = line.Split('\t')[1];
+                                byte[] data = Convert.FromBase64String(encodedStream);
+                                MemoryStream stream = new MemoryStream(data);
                                 using (MemoryStream memoryStream = new MemoryStream())
                                 {
-                                    var imageSource = new BitmapImage();
+                                    BitmapImage imageSource = new BitmapImage();
                                     imageSource.BeginInit();
                                     imageSource.StreamSource = stream;
                                     imageSource.EndInit();
