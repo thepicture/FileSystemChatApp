@@ -1,6 +1,7 @@
 ﻿using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -17,21 +18,20 @@ namespace ChatApp2
     /// </summary>
     public partial class MainWindow : Window
     {
-        readonly Timer timer = new Timer
+        private readonly Timer timer = new Timer
         {
             Interval = 2000,
         };
-        string openedFileName = "";
-        readonly string currentDirectory = Directory.GetCurrentDirectory() + "\\t";
-        readonly string currentDirectoryOnline = Directory.GetCurrentDirectory() + "\\o";
-        public readonly string currentDirectoryStream = Directory.GetCurrentDirectory() + "\\s";
+        private readonly string openedFileName = "";
+        private readonly string currentDirectory = Directory.GetCurrentDirectory()
+            + "\\t";
+        private readonly string currentDirectoryOnline = Directory.GetCurrentDirectory()
+            + "\\o";
+        public readonly string currentDirectoryStream = Directory.GetCurrentDirectory()
+            + "\\s";
 
-        string sentFile; // Stream of the sent file.
-        string fileName; // Filename of the sent file.
-
-        public MainWindow()
-        {
-        }
+        private string sentFile; // Stream of the sent file.
+        private string fileName; // Filename of the sent file.
 
         /// <summary>
         /// Actions for initializating a program.
@@ -44,7 +44,7 @@ namespace ChatApp2
             AppData.MainWindow = this;
             if (e.Count() > 1)
             {
-                if (MessageBox.Show("Открыть с помощью чата можно один файл за раз. Желаете ли вы прикрепить первый выделенный файл?", "Информация", MessageBoxButton.YesNo, MessageBoxImage.Information) == MessageBoxResult.Yes)
+                if (UserWantsToOpenAttachedFile())
                 {
                     openedFileName = e.First();
                 }
@@ -57,7 +57,7 @@ namespace ChatApp2
             if (!string.IsNullOrEmpty(openedFileName))
             {
                 MyCodeWindow myCodeWindow = new MyCodeWindow();
-                myCodeWindow.ShowDialog();
+                _ = myCodeWindow.ShowDialog();
                 if (myCodeWindow.DialogResult == true)
                 {
                     TBoxMyCode.Text = myCodeWindow.TBoxName.Text;
@@ -65,41 +65,66 @@ namespace ChatApp2
                 }
                 else
                 {
-                    MessageBox.Show("Операция отменена.", "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
+                    _ = MessageBox.Show("Операция отменена.",
+                        "Информация",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
                 }
             }
 
             if (File.Exists(currentDirectory) == false)
+            {
                 File.Create(currentDirectory).Close();
+            }
+
             if (File.Exists(currentDirectoryOnline) == false)
+            {
                 File.Create(currentDirectoryOnline).Close();
+            }
 
-
-            TBoxMessage.Focus();
+            _ = TBoxMessage.Focus();
             timer.Elapsed += Timer_Elapsed;
         }
 
+        private static bool UserWantsToOpenAttachedFile()
+        {
+            return MessageBox.Show("Открыть с помощью чата можно один файл за раз. " +
+                                "Открыть первый выделенный файл?",
+                                "Информация",
+                                MessageBoxButton.YesNo,
+                                MessageBoxImage.Information) == MessageBoxResult.Yes;
+        }
+
         /// <summary>
-        /// Actions when Timer has elapsed.
+        /// Actions when the timer has elapsed.
         /// </summary>
         private void Timer_Elapsed(object sender, ElapsedEventArgs e)
         {
             Dispatcher.Invoke(() => BtnUpdate_Click(timer, null));
             Dispatcher.Invoke(() =>
             {
-                File.AppendAllText(currentDirectoryOnline, $"{(string.IsNullOrWhiteSpace(TBoxMyCode.Text) ? Environment.MachineName.ToString() : TBoxMyCode.Text)}\t" +
-                $"{DateTime.Now}\n");
+                File.AppendAllText(currentDirectoryOnline,
+                    $"{GetMachineOrUserName()}\t{DateTime.Now}\n");
             });
         }
 
+        private string GetMachineOrUserName()
+        {
+            return string.IsNullOrWhiteSpace(TBoxMyCode.Text)
+                ? Environment.MachineName.ToString()
+                : TBoxMyCode.Text;
+        }
+
         /// <summary>
-        /// Actions for validating and sending the message.
+        /// Actions for validating and sending a message.
         /// </summary>
-        private void BtnSend_Click(object sender, RoutedEventArgs e)
+        private void BtnSend_Click(object sender = null, RoutedEventArgs e = null)
         {
             if (TBoxMyCode.Text.Trim().ToLower() == "я")
             {
-                MessageBox.Show($"Нельзя использовать имя 'Я'. Сообщение не было доставлено. Пожалуйста, смените имя.",
+                _ = MessageBox.Show($"Нельзя использовать имя 'Я'. " +
+                    $"Сообщение не было доставлено. " +
+                    $"Пожалуйста, смените имя.",
                     "Ошибка",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
@@ -107,23 +132,29 @@ namespace ChatApp2
             }
             if (string.IsNullOrWhiteSpace(TBoxMessage.Text) && sentFile == null)
             {
-                MessageBox.Show("Нельзя отправить пустое сообщение. Пожалуйста, введите сообщение.",
+                _ = MessageBox.Show("Нельзя отправить пустое сообщение. " +
+                    "Пожалуйста, введите непустое сообщение.",
                     "Ошибка",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
                 return;
             }
-            var myName = string.IsNullOrWhiteSpace(TBoxMyCode.Text) ? Environment.MachineName.ToString() : TBoxMyCode.Text;
+            string myName = string.IsNullOrWhiteSpace(TBoxMyCode.Text)
+                ? Environment.MachineName.ToString()
+                : TBoxMyCode.Text;
             if (sentFile == null)
             {
 
                 File.AppendAllText(currentDirectory, $"{myName}\t" +
                     $"{DateTime.Now.ToString().Split(' ')[0]}\t" +
                     $"{DateTime.Now.ToString().Split(' ')[1]}\t" +
-                    $"{TBoxMessage.Text}\n");
+                    $"{TBoxMessage.Text.Replace(Environment.NewLine, "&#`")}\n");
                 TBoxMessage.Text = null;
                 BtnUpdate_Click(this, e);
-                MessageView.ScrollIntoView(MessageView.Items[MessageView.Items.Count - 1]);
+                MessageView.ScrollIntoView
+                    (
+                        MessageView.Items[MessageView.Items.Count - 1]
+                    );
             }
             else
             {
@@ -133,28 +164,33 @@ namespace ChatApp2
                     $"{TBoxMessage.Text}\t" +
                     $"в\t" +
                     $"{fileName}\n");
-                File.AppendAllText(currentDirectoryStream, $"{myName}\t{sentFile}\t{fileName}\n");
+                File.AppendAllText(currentDirectoryStream,
+                    $"{myName}\t{sentFile}\t{fileName}\n");
                 TBoxMessage.Text = null;
                 BtnUpdate_Click(this, e);
                 sentFile = null;
                 BtnFile.Content = "Прикрепить файл";
                 BtnFile.IsEnabled = true;
-                MessageView.ScrollIntoView(MessageView.Items[MessageView.Items.Count - 1]);
+                MessageView.ScrollIntoView
+                    (
+                        MessageView.Items[MessageView.Items.Count - 1]
+                    );
             }
             RunTimeOut(2);
         }
 
         /// <summary>
-        /// Actions for antispam. Accepts seconds as parameter.
+        /// Actions for preventing spam. 
+        /// Accepts seconds as the timeout parameter.
         /// </summary>
-        /// <param name="v">Seconds</param>
-        private void RunTimeOut(int v)
+        /// <param name="seconds">Seconds to the next timeout.</param>
+        private void RunTimeOut(int seconds)
         {
             BtnSend.IsEnabled = false;
-            var timeOutTimer = new Timer
+            Timer timeOutTimer = new Timer
             {
-                Interval = v * 1000,
-                AutoReset = false
+                Interval = seconds * 1000,
+                AutoReset = false,
             };
             timeOutTimer.Elapsed += TimeOutTimer_Elapsed;
             timeOutTimer.Start();
@@ -162,31 +198,38 @@ namespace ChatApp2
 
         private void TimeOutTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            Dispatcher.Invoke(() => BtnSend.IsEnabled = true);
+            _ = Dispatcher.Invoke(() => BtnSend.IsEnabled = true);
         }
 
         /// <summary>
-        /// Actions for loading messages from a directory.
+        /// Actions for loading messages from the current directory.
         /// </summary>
         private void BtnUpdate_Click(object sender, RoutedEventArgs e)
         {
 
             CheckOnline();
             int messagesCount = File.ReadLines(currentDirectory).Count();
-            if (TBlockFilesCount.Text.Contains("...") == false
-                && Convert.ToInt32(TBlockFilesCount.Text.Split(' ')[3]) == messagesCount
-                && sender != TBoxMyCode
-                && sender != this)
+            if (NoNewMessages(sender, messagesCount))
             {
                 return;
             }
-            var tupleList = from row in File.ReadLines(currentDirectory)
-                            let arr = row.Split('\t')
-                            select new Tuple<string, string, string, string, bool, string>(arr[0], arr[1], arr[2], arr[3], arr.ElementAtOrDefault(4) != null, arr.ElementAtOrDefault(5));
-            int filesCount = tupleList.Where(p => p.Item5 == true).Count();
-            var messageEntity = new List<MessageEntity>();
+            IEnumerable<Tuple<string, string, string, string, bool, string>> tupleList =
+                from row in File.ReadLines(currentDirectory)
+                let arr = row.Split('\t')
+                select new Tuple<string, string, string, string, bool, string>
+                (
+                    arr[0],
+                    arr[1],
+                    arr[2],
+                    arr[3].Replace("&#`", Environment.NewLine),
+                    arr.ElementAtOrDefault(4) != null,
+                    arr.ElementAtOrDefault(5)
+                );
+            int filesCount = tupleList.Count(p => p.Item5);
+            List<MessageEntity> messageEntity = new List<MessageEntity>();
 
-            foreach (var tuple in tupleList)
+            foreach (Tuple<string, string, string, string, bool, string> tuple
+                in tupleList)
             {
                 messageEntity.Add(new MessageEntity
                 {
@@ -200,42 +243,74 @@ namespace ChatApp2
             }
             if (string.IsNullOrWhiteSpace(MessagesCountBox.Text))
             {
-                MessageView.ItemsSource = Enumerable.Reverse(messageEntity).Take(10).Reverse().ToList();
+                MessageView.ItemsSource = Enumerable
+                    .Reverse(messageEntity)
+                    .Take(10)
+                    .Reverse()
+                    .ToList();
             }
             else
             {
-
                 try
                 {
-                    MessageView.ItemsSource = Enumerable.Reverse(messageEntity).Take(int.Parse(MessagesCountBox.Text)).Reverse().ToList();
+                    MessageView.ItemsSource = Enumerable
+                        .Reverse(messageEntity)
+                        .Take(int.Parse(MessagesCountBox.Text))
+                        .Reverse()
+                        .ToList();
                 }
                 catch (Exception)
                 {
-                    MessageBox.Show("С количеством последних сообщений что-то пошло не так. Перезапустите, пожалуйста, чат.", "Ошибка",
+                    _ = MessageBox.Show("С количеством последних сообщений " +
+                        "что-то пошло не так. " +
+                        "Перезапустите чат.", "Ошибка",
                         MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
 
             if (CheckBoxUpdate.IsChecked == true)
+            {
                 timer.Start();
-            if (CheckBoxUpdate.IsEnabled == false)
-                CheckBoxUpdate.IsEnabled = true;
-            if (MessagesCountBox.IsEnabled == false)
-                MessagesCountBox.IsEnabled = true;
-            if (BtnScroll.IsEnabled == false)
-                BtnScroll.IsEnabled = true;
+            }
 
-            TBlockFilesCount.Text = $"вложений: {filesCount} \nсообщений: {messagesCount}";
+            if (CheckBoxUpdate.IsEnabled == false)
+            {
+                CheckBoxUpdate.IsEnabled = true;
+            }
+
+            if (MessagesCountBox.IsEnabled == false)
+            {
+                MessagesCountBox.IsEnabled = true;
+            }
+
+            if (BtnScroll.IsEnabled == false)
+            {
+                BtnScroll.IsEnabled = true;
+            }
+
+            TBlockFilesCount.Text = $"вложений: {filesCount} " +
+                $"\nсообщений: {messagesCount}";
+        }
+
+        private bool NoNewMessages(object sender, int messagesCount)
+        {
+            return TBlockFilesCount.Text.Contains("...") == false
+                   && Convert.ToInt32(TBlockFilesCount.Text.Split(' ')[3])
+                   == messagesCount
+                   && sender != TBoxMyCode
+                   && sender != this;
         }
 
         /// <summary>
-        /// Actions for getting online users count with less than 4 seconds last activity.
+        /// Actions for getting online users count 
+        /// with less than 4 seconds 
+        /// last activity.
         /// </summary>
         private void CheckOnline()
         {
             if (ChatWindow.IsActive == false)
             {
-                if (Convert.ToInt32(TBlockFilesCount.Text.Split(' ')[3]) != File.ReadLines(currentDirectory).Count() && (TBoxOnline.Text.Contains("Лоадинг") == false))
+                if (NeedsToUpdateOnline())
                 {
                     dispatcherTimer.Start();
                 }
@@ -243,19 +318,38 @@ namespace ChatApp2
             else
             {
                 dispatcherTimer.Stop();
-                taskBarItem.ProgressState = System.Windows.Shell.TaskbarItemProgressState.None;
+                taskBarItem.ProgressState = System.Windows.Shell
+                    .TaskbarItemProgressState.None;
             }
 
-            var onlineUsers = from row in File.ReadLines(currentDirectoryOnline)
-                              let word = row.Split('\t')
-                              where DateTime.Now.ToUniversalTime() < DateTime.Parse(word[1]).ToUniversalTime().AddSeconds(4)
-                              group word by new { Name = word[0], time = word[1] };
-            TBoxOnline.Text = $"Онлайн: {onlineUsers.GroupBy(o => o.Key.Name).Count()}\n";
-            foreach (var o in onlineUsers)
+            IEnumerable<IGrouping<(string Name, string time), string[]>> onlineUsers =
+                from row in File.ReadLines(currentDirectoryOnline)
+                let word = row.Split('\t')
+                where MessageIsRecentlySent(word)
+                group word by (Name: word[0], time: word[1]);
+            TBoxOnline.Text = "Онлайн: " +
+                $"{onlineUsers.GroupBy(o => o.Key.Name).Count()}\n";
+            foreach (IGrouping<(string Name, string time), string[]> o in onlineUsers)
             {
                 if (TBoxOnline.Text.Contains(o.Key.Name) == false)
+                {
                     TBoxOnline.Text += $"{o.Key.Name}\n";
+                }
             }
+        }
+
+        private static bool MessageIsRecentlySent(string[] word)
+        {
+            return DateTime.Now
+                   .ToUniversalTime() < DateTime.Parse(word[1])
+                   .ToUniversalTime().AddSeconds(4);
+        }
+
+        private bool NeedsToUpdateOnline()
+        {
+            return Convert.ToInt32(TBlockFilesCount.Text.Split(' ')[3])
+                != File.ReadLines(currentDirectory).Count()
+                && (TBoxOnline.Text.Contains("Лоадинг") == false);
         }
 
         /// <summary>
@@ -277,11 +371,11 @@ namespace ChatApp2
         /// <summary>
         /// Sends a message after clicking Enter key.
         /// </summary>
-        private void TBoxMessage_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        private void TBoxMessage_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key == System.Windows.Input.Key.Enter && BtnSend.IsEnabled == true)
+            if (e.Key == Key.Enter && BtnSend.IsEnabled)
             {
-                BtnSend_Click(null, null);
+                BtnSend_Click();
             }
         }
 
@@ -292,15 +386,13 @@ namespace ChatApp2
         {
             if (sender is MainWindow)
             {
-                var stream = openedFileName;
-                byte[] bytes = File.ReadAllBytes(stream);
+                string filePath = openedFileName;
+                byte[] bytes = File.ReadAllBytes(filePath);
                 sentFile = Convert.ToBase64String(bytes);
-                fileName = Path.GetFileName(stream);
+                fileName = Path.GetFileName(filePath);
                 BtnFile.IsEnabled = false;
                 BtnFile.Content = fileName;
-                MessageBox.Show("Файл прикреплён и будет отправлен с сообщением", "Операция успешна",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                ShowFileIsAttachedMessage();
                 return;
             }
             if (!string.IsNullOrWhiteSpace(TBoxMyCode.Text))
@@ -308,29 +400,37 @@ namespace ChatApp2
                 OpenFileDialog openFileDialog = new OpenFileDialog();
                 if (openFileDialog.ShowDialog() == true)
                 {
-                    var stream = openFileDialog.FileName;
+                    string stream = openFileDialog.FileName;
                     byte[] bytes = File.ReadAllBytes(stream);
                     sentFile = Convert.ToBase64String(bytes);
                     fileName = openFileDialog.SafeFileName;
                     BtnFile.IsEnabled = false;
                     BtnFile.Content = fileName;
-                    MessageBox.Show("Файл прикреплён и будет отправлен с сообщением", "Операция успешна",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Information);
+                    ShowFileIsAttachedMessage();
                 }
             }
             else
             {
-                MessageBox.Show("Нельзя отправлять файлы анонимно. Пожалуйста, укажите имя.", "Ошибка",
+                _ = MessageBox.Show("Нельзя отправлять файлы анонимно. " +
+                    "Укажите имя.", "Ошибка",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
             }
         }
 
+        private void ShowFileIsAttachedMessage()
+        {
+            _ = MessageBox.Show("Файл прикреплён " +
+                "и будет отправлен с сообщением",
+                "Операция успешна",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+        }
+
         /// <summary>
         /// Actions for stopping the timer when the form is closing.
         /// </summary>
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        private void Window_Closing(object sender, CancelEventArgs e)
         {
             timer.Stop();
             App.Current.Shutdown();
@@ -342,7 +442,7 @@ namespace ChatApp2
         private void BtnSave_Click(object sender, RoutedEventArgs e)
         {
             FileWindow fileWindow = new FileWindow();
-            fileWindow.ShowDialog();
+            _ = fileWindow.ShowDialog();
         }
 
         /// <summary>
@@ -352,11 +452,16 @@ namespace ChatApp2
         {
             File.WriteAllText(currentDirectory, "");
             File.WriteAllText(currentDirectoryStream, "");
-            MessageBox.Show("Диалог и вложения успешно очищены!", "Операция успешна", MessageBoxButton.OK, MessageBoxImage.Information);
+            _ = MessageBox.Show("Диалог и вложения успешно очищены!",
+                "Операция успешна",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
         }
 
         /// <summary>
-        /// Actions for updating dialog when name is changed but dialog lines count does not.
+        /// Actions for updating a dialog 
+        /// when its name was changed 
+        /// but the count of dialog lines was not.
         /// </summary>
         private void TBoxMyCode_LostFocus(object sender, RoutedEventArgs e)
         {
@@ -371,10 +476,89 @@ namespace ChatApp2
         {
             File.WriteAllText(currentDirectoryOnline, "");
             if (e != null)
-                MessageBox.Show("Онлайн успешно очищен!", "Операция успешна", MessageBoxButton.OK, MessageBoxImage.Information);
+            {
+                _ = MessageBox.Show("Онлайн успешно очищен!",
+                    "Операция успешна",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
         }
 
-        readonly string emojies = "😀 😃 😄 😁 😆 😅 😂 😊 😇 😉 😌 😍 😘 😗 😙 😚 😋 😛 😝 😜 😎 😏 😒 😞 😔 😟 😕 😣 😖 😫 😩 😢 😭 😤 😠 😡 😳 😱 😨 😰 😥 😓 😶 😐 😑 😬 😯 😦 😧 😮 😲 😴 😪 😵 😷 😈 👿 👹 👺 💩 👻 💀 ☠️ 👽 👾 🎃 😺 😸 😹 😻 😼 😽 🙀 😿 😾";
+        private const string emojiesTemplate = "😀 " +
+            "😃 " +
+            "😄 " +
+            "😁 " +
+            "😆 " +
+            "😅 " +
+            "😂 " +
+            "😊 " +
+            "😇 " +
+            "😉 " +
+            "😌 " +
+            "😍 " +
+            "😘 " +
+            "😗 " +
+            "😙 " +
+            "😚 " +
+            "😋 " +
+            "😛 " +
+            "😝 " +
+            "😜 " +
+            "😎 " +
+            "😏 " +
+            "😒 " +
+            "😞 " +
+            "😔 " +
+            "😟 " +
+            "😕 " +
+            "😣 " +
+            "😖 " +
+            "😫 " +
+            "😩 " +
+            "😢 " +
+            "😭 " +
+            "😤 " +
+            "😠 " +
+            "😡 " +
+            "😳 " +
+            "😱 " +
+            "😨 " +
+            "😰 " +
+            "😥 " +
+            "😓 " +
+            "😶 " +
+            "😐 " +
+            "😑 " +
+            "😬 " +
+            "😯 " +
+            "😦 " +
+            "😧 " +
+            "😮 " +
+            "😲 " +
+            "😴 " +
+            "😪 " +
+            "😵 " +
+            "😷 " +
+            "😈 " +
+            "👿 " +
+            "👹 " +
+            "👺 " +
+            "💩 " +
+            "👻 " +
+            "💀 " +
+            "☠️ " +
+            "👽 " +
+            "👾 " +
+            "🎃 " +
+            "😺 " +
+            "😸 " +
+            "😹 " +
+            "😻 " +
+            "😼 " +
+            "😽 " +
+            "🙀 " +
+            "😿 " +
+            "😾";
         /// <summary>
         /// Actions for showing the emoji panel.
         /// </summary>
@@ -386,11 +570,11 @@ namespace ChatApp2
                 return;
             }
             EmojiList.Visibility = Visibility.Visible;
-            EmojiList.ItemsSource = from emoji in emojies.Split(' ')
-                                    select new EmojiClass { EmojiSelected = emoji };
+            EmojiList.ItemsSource = from emoji in emojiesTemplate.Split(' ')
+                                    select new Emoji { EmojiSelected = emoji };
         }
 
-        class EmojiClass
+        public class Emoji
         {
             public string EmojiSelected { get; set; }
         }
@@ -400,34 +584,37 @@ namespace ChatApp2
         /// </summary>
         private void EmojiSquare_Click(object sender, RoutedEventArgs e)
         {
-            var context = (sender as Button).DataContext;
-            TBoxMessage.Text += (context as EmojiClass).EmojiSelected;
+            Emoji emoji = (sender as Button).DataContext as Emoji;
+            TBoxMessage.Text += emoji.EmojiSelected;
         }
 
-        private void Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        private void Slider_ValueChanged(object sender,
+                                         RoutedPropertyChangedEventArgs<double> e)
         {
             ChatWindow.FontSize = FontSlider.Value;
         }
 
-        private void Border_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        {
-            TBoxMessage.Text += $"{((sender as Border).DataContext as MessageEntity).UserName},";
-        }
-
-        private void MessagesCountBox_PreviewTextInput(object sender, System.Windows.Input.TextCompositionEventArgs e)
+        private void MessagesCountBox_PreviewTextInput(object sender,
+                                                       TextCompositionEventArgs e)
         {
             Regex regex = new Regex("[^1-9]+");
             e.Handled = regex.IsMatch(e.Text);
         }
 
-        private void MessagesCountBox_PreviewExecuted(object sender, System.Windows.Input.ExecutedRoutedEventArgs e)
+        private void MessagesCountBox_PreviewExecuted(object sender,
+                                                      ExecutedRoutedEventArgs e)
         {
-            if (e.Command == ApplicationCommands.Copy ||
-         e.Command == ApplicationCommands.Cut ||
-         e.Command == ApplicationCommands.Paste)
+            if (CommandIsCopyOrCutOrPaste(e))
             {
                 e.Handled = true;
             }
+        }
+
+        private static bool CommandIsCopyOrCutOrPaste(ExecutedRoutedEventArgs e)
+        {
+            return e.Command == ApplicationCommands.Copy ||
+                     e.Command == ApplicationCommands.Cut ||
+                     e.Command == ApplicationCommands.Paste;
         }
 
         private void MessagesCountBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -435,34 +622,66 @@ namespace ChatApp2
             BtnUpdate_Click(this, null);
         }
 
-        readonly DispatcherTimer dispatcherTimer = new DispatcherTimer { Interval = new TimeSpan(0, 0, 1) };
-       
+        public readonly DispatcherTimer dispatcherTimer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromSeconds(1)
+        };
+
         /// <summary>
         /// Actions for blinking app icon in the user's toolbar.
         /// </summary>
         private void DispatcherTimer_Tick(object sender, EventArgs e)
         {
-            if (taskBarItem.ProgressState == System.Windows.Shell.TaskbarItemProgressState.Indeterminate)
-                taskBarItem.ProgressState = System.Windows.Shell.TaskbarItemProgressState.None;
-            else
-                taskBarItem.ProgressState = System.Windows.Shell.TaskbarItemProgressState.Indeterminate;
+            taskBarItem.ProgressState = IsNewMessagesState()
+                ? System.Windows.Shell.TaskbarItemProgressState.None
+                : System.Windows.Shell.TaskbarItemProgressState.Indeterminate;
+        }
+
+        private bool IsNewMessagesState()
+        {
+            return taskBarItem.ProgressState ==
+                System.Windows.Shell.TaskbarItemProgressState.Indeterminate;
         }
 
         private void BtnScroll_Click(object sender, RoutedEventArgs e)
         {
-            if(MessageView.Items.Count > 0)
-            MessageView.ScrollIntoView(MessageView.Items[MessageView.Items.Count - 1]);
+            if (MessageView.Items.Count > 0)
+            {
+                MessageView.ScrollIntoView
+                    (
+                        MessageView.Items[MessageView.Items.Count - 1]
+                    );
+            }
         }
 
         private void CheckBoxImage_Checked(object sender, RoutedEventArgs e)
         {
-            if(ChatWindow.IsInitialized == true)
-            BtnUpdate_Click(this, null);
+            if (ChatWindow.IsInitialized)
+            {
+                BtnUpdate_Click(this, null);
+            }
         }
 
         private void CheckBoxImage_Unchecked(object sender, RoutedEventArgs e)
         {
             BtnUpdate_Click(this, null);
+        }
+
+        private void BtnCopyMessage_Click(object sender, RoutedEventArgs e)
+        {
+            string message = ((sender as Button).DataContext as MessageEntity).Message;
+            Clipboard.SetText(message);
+            _ = MessageBox.Show("Текст скопирован");
+        }
+
+        private void NoteUserButton_Click(object sender, RoutedEventArgs e)
+        {
+            TBoxMessage.Text += $"{GetNotedUserName(sender)},";
+        }
+
+        private static string GetNotedUserName(object sender)
+        {
+            return ((sender as Button).DataContext as MessageEntity).UserName;
         }
     }
 }

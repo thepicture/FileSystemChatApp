@@ -71,13 +71,49 @@
         <ListView ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Hidden" ScrollViewer.CanContentScroll="False" Background="#EEE" Grid.Row="1" Name="MessageView">
             <ListView.ItemTemplate>
                 <DataTemplate>
-                    <Border Cursor="Hand" ToolTip="Цитировать имя отправителя"  MouseLeftButtonDown="Border_MouseLeftButtonDown" Margin="5" Background="#DDD" BorderThickness="1" BorderBrush="#CACACA" CornerRadius="4">
+                    <Border Margin="5" Background="#DDD" BorderThickness="1" BorderBrush="#CACACA" CornerRadius="4">
                         <Grid Margin="30">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="30"></RowDefinition>
                                 <RowDefinition Height="*"></RowDefinition>
                                 <RowDefinition Height="*"></RowDefinition>
                             </Grid.RowDefinitions>
+                            <StackPanel Orientation="Horizontal"
+                                        Grid.Row="2"
+                                        HorizontalAlignment="Right">
+                                <Button Cursor="Hand"
+                                        Name="BtnCopyMessage"
+                                        Click="BtnCopyMessage_Click">
+                                    <Button.Template>
+                                        <ControlTemplate>
+                                            <TextBlock>
+                                                <TextBlock.Inlines>
+                                                    <Run Text="["></Run>
+                                                    <Run Text="Скопировать"
+                                                     Foreground="#FF6600"></Run>
+                                                    <Run Text="]"></Run>
+                                                </TextBlock.Inlines>
+                                            </TextBlock>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
+                                <Button Cursor="Hand"
+                                        Name="NoteUserButton"
+                                        Click="NoteUserButton_Click">
+                                    <Button.Template>
+                                        <ControlTemplate>
+                                            <TextBlock>
+                                                <TextBlock.Inlines>
+                                                    <Run Text="["></Run>
+                                                    <Run Text="Цитировать имя"
+                                                     Foreground="#FF6600"></Run>
+                                                    <Run Text="]"></Run>
+                                                </TextBlock.Inlines>
+                                            </TextBlock>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
+                            </StackPanel>
                             <StackPanel Grid.Row="0" Margin="-20 -15 0 0" Orientation="Horizontal">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Margin="5 0 0 0" Grid.Row="0" Text="{Binding UserName}"></TextBlock>
@@ -113,7 +149,9 @@
                 <ColumnDefinition Width="25*"/>
                 <ColumnDefinition Width="43*"/>
             </Grid.ColumnDefinitions>
-            <TextBox HorizontalAlignment="Stretch" KeyDown="TBoxMessage_KeyDown" MaxLength="60" Name="TBoxMessage" Margin="5"></TextBox>
+            <TextBox HorizontalAlignment="Stretch" KeyDown="TBoxMessage_KeyDown" MaxLength="1024" Name="TBoxMessage" Margin="5"
+                     TextWrapping="Wrap"
+                     AcceptsReturn="True"></TextBox>
             <DockPanel Grid.Column="1">
                 <Button Name="BtnEmoji" Grid.Column="1" Content="😃" Click="BtnEmoji_Click" Margin="5"></Button>
                 <Button Name="BtnSend" Grid.Column="1" Click="BtnSend_Click" Content="Отправить" Margin="5"></Button>
